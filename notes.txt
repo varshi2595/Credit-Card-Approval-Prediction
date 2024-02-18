@@ -1,0 +1,44 @@
+need pre-processing for status variable -> values are numeric except for no loan or due. X char is present
+CNT_CHILDREN as well
+
+riskUsers = ccApproval[ccApproval$TARGET==1,]
+nrow(riskUsers)
+#0.03 percent users are risk users. need undersampling/oversampling?
+
+preprocessing:
+
+gender
+own car
+own realty
+cnt_children -> change into 3 categories.
+education type -> with levels
+family status
+housing_type
+days_birth -> abs(val)/365
+days_employed -> abs(val)
+job -> check if the categories are limited, if yes change them to factor. else leave it.
+status -> chance c to p to make better meaning out of it. p means paid.
+begin_months -> abs(val)
+
+###set.seed(123)
+
+#0.03 percent users are risk users. need undersampling/oversampling -> we need to consider this as well.
+
+-> build models decision tree, glm, bayesian, logistic with all variables.
+compare the accuracy. (kind of ensemble method). include bagging boosting if needed.
+
+-> since there are only 0.03 percent, we need to do undersampling/oversampling to the actual data.
+
+
+
+
+-> then we'll think of principal component analysis
+
+537667
+1962
+537667-1962
+
+1962*x = 100000
+x=51
+
+x1/537667 = 51
