@@ -1,0 +1,512 @@
+actual <- as.character(ccApproval.test$TARGET)
+#doing ROC to find the Youden point
+library(ROCit)
+cm <- table(predict, actual)
+#doing ROC to find the Youden point
+library(ROCit)
+roc_logit <- rocit(score = logit.predict, class = actual)
+result_logit = data.frame(cbind(AUC=roc_logit$AUC, Cutoff=roc_logit$Cutoff,
+TPR=roc_logit$TPR, FPR=roc_logit$FPR))
+head(result_logit)
+result_logit$diff = result_logit$TPR - result_logit$FPR
+result_logit[which.max(result_logit[, c("diff")]), ]
+plot(roc_logit, YIndex = T, col = c(2,4)) # Changing color
+cutoff <- result_logit[which.max(result_logit[, c("diff")]), 2]
+predict <- ifelse(logit.predict>cutoff, "1","0")
+#57% accuracy
+library(caret)
+cm <- table(predict, actual)
+confusionMatrix(cm)
+cat("\014")
+x <- c()
+#colnames(x) <- c("idx","levels")
+#typeof(ccApproval[,2])
+for(i in 1:ncol(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+ccApproval[,i] <- as.numeric(ccApproval[,i])
+}
+}
+library(smotefamily)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% c("STATUS")],ccApproval$TARGET)
+smoteData <- smote$data
+#convert numeric to factors again?
+nrow(smote$data[smote$data$TARGET==1,])
+nrow(smote$data[smote$data$TARGET==0,])
+logit(smoteData)
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+#ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+x <- c()
+#colnames(x) <- c("idx","levels")
+#typeof(ccApproval[,2])
+for(i in 1:ncol(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+ccApproval[,i] <- as.numeric(ccApproval[,i])
+}
+}
+library(smotefamily)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% c("STATUS")],ccApproval$TARGET)
+smoteData <- smote$data
+logit(smoteData)
+logit <- function(ccApproval){
+#logistic regression
+set.seed(123)
+library(rpart)
+train = sample(1:nrow(ccApproval),(2/3)*nrow(ccApproval))
+#removing status since it is has a direct relationship with the class to be predicted
+featuresToRemove = c("STATUS")
+ccApproval.train = ccApproval[train,!names(ccApproval) %in% featuresToRemove]
+ccApproval.test = ccApproval[-train,!names(ccApproval) %in% featuresToRemove]
+#nrow(ccApproval.train[ccApproval.test$TARGET=="1",])/nrow(ccApproval.train)
+logit.reg <- glm(TARGET ~ ., data = ccApproval.train, family = "binomial")
+logit.predict <- predict(logit.reg, ccApproval.test, type = "response")
+actual <- as.character(ccApproval.test$TARGET)
+#doing ROC to find the Youden point
+library(ROCit)
+roc_logit <- rocit(score = logit.predict, class = actual)
+result_logit = data.frame(cbind(AUC=roc_logit$AUC, Cutoff=roc_logit$Cutoff,
+TPR=roc_logit$TPR, FPR=roc_logit$FPR))
+head(result_logit)
+result_logit$diff = result_logit$TPR - result_logit$FPR
+result_logit[which.max(result_logit[, c("diff")]), ]
+plot(roc_logit, YIndex = T, col = c(2,4)) # Changing color
+cutoff <- result_logit[which.max(result_logit[, c("diff")]), 2]
+predict <- ifelse(logit.predict>cutoff, "1","0")
+#57% accuracy
+library(caret)
+cm <- table(predict, actual)
+confusionMatrix(cm)
+}
+logit(smoteData)
+set.seed(123)
+library(rpart)
+train = sample(1:nrow(ccApproval),(2/3)*nrow(ccApproval))
+#removing status since it is has a direct relationship with the class to be predicted
+featuresToRemove = c("STATUS")
+train = sample(1:nrow(smoteData),(2/3)*nrow(smoteData))
+#removing status since it is has a direct relationship with the class to be predicted
+featuresToRemove = c("STATUS")
+smoteTrain = smoteData[train,!names(smoteData) %in% featuresToRemove]
+smoteTest = smoteData[-train,!names(smoteData) %in% featuresToRemove]
+logit.reg <- glm(TARGET ~ ., data = smoteTrain, family = "binomial")
+smoteData$TARGET = as.factor(smoteData$TARGET)
+#convert numeric to factors again?
+nrow(smote$data[smote$data$TARGET==1,])
+nrow(smote$data[smote$data$TARGET==0,])
+train = sample(1:nrow(smoteData),(2/3)*nrow(smoteData))
+set.seed(123)
+train = sample(1:nrow(smoteData),(2/3)*nrow(smoteData))
+#removing status since it is has a direct relationship with the class to be predicted
+featuresToRemove = c("STATUS")
+smoteTrain = smoteData[train,!names(smoteData) %in% featuresToRemove]
+smoteTest = smoteData[-train,!names(smoteData) %in% featuresToRemove]
+logit.reg <- glm(TARGET ~ ., data = smoteTrain, family = "binomial")
+rm(list=ls())
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+#ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+x <- c()
+for(i in 1:ncol(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+ccApproval[,i] <- as.numeric(ccApproval[,i])
+}
+}
+library(smotefamily)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% c("STATUS")],ccApproval$TARGET)
+smoteData <- smote$data
+#convert numeric to factors again?
+nrow(smote$data[smote$data$TARGET==1,])
+nrow(smote$data[smote$data$TARGET==0,])
+ctrl <- trainControl(method="cv", number=10)
+library(caret)
+ctrl <- trainControl(method="cv", number=10)
+knnFit <- train(TARGET~., method = "knn", trControl = ctrl, preProcess = c("center","scale"),
+tuneGrid = expand.grid(k = 1:10))
+knnFit <- train(TARGET ~ ., method = "knn", trControl = ctrl, preProcess = c("center","scale"),
+tuneGrid = expand.grid(k = 1:10))
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% c("STATUS","ID")],ccApproval$TARGET)
+smoteData <- smote$data
+formula <- as.formula(TARGET ~ CODE_GENDER+FLAG_OWN_CAR+FLAG_OWN_REALTY+CNT_CHILDREN+AMT_INCOME_TOTAL+NAME_EDUCATION_TYPE
++NAME_FAMILY_STATUS+NAME_HOUSING_TYPE+DAYS_BIRTH+DAYS_EMPLOYED+FLAG_MOBIL+FLAG_WORK_PHONE+FLAG_PHONE+FLAG_EMAIL
++JOB+BEGIN_MONTHS+AGE)
+knnFit <- train(formula, method = "knn", trControl = ctrl, preProcess = c("center","scale"),
+tuneGrid = expand.grid(k = 1:10))
+#train test
+set.seed(123)
+library(rpart)
+View(ccApproval)
+library(rpart)
+train = sample(1:nrow(smoteData),(2/3)*nrow(smoteData))
+#removing status since it is has a direct relationship with the class to be predicted
+featuresToRemove = c("STATUS","class")
+smoteTrain = smoteData[train,!names(smoteData) %in% smoteData]
+smoteTest = smoteData[-train,!names(smoteData) %in% smoteData]
+#train test
+set.seed(123)
+library(rpart)
+train = sample(1:nrow(smoteData),(2/3)*nrow(smoteData))
+#removing status since it is has a direct relationship with the class to be predicted
+featuresToRemove = c("STATUS","class")
+smoteTrain = smoteData[train,!names(smoteData) %in% smoteData]
+smoteTest = smoteData[-train,!names(smoteData) %in% smoteData]
+library(caret)
+ctrl <- trainControl(method="cv", number=10)
+formula <- as.formula(TARGET ~ CODE_GENDER+FLAG_OWN_CAR+FLAG_OWN_REALTY+CNT_CHILDREN+AMT_INCOME_TOTAL+NAME_EDUCATION_TYPE
++NAME_FAMILY_STATUS+NAME_HOUSING_TYPE+DAYS_BIRTH+DAYS_EMPLOYED+FLAG_MOBIL+FLAG_WORK_PHONE+FLAG_PHONE+FLAG_EMAIL
++JOB+BEGIN_MONTHS+AGE)
+knnFit <- train(formula, method = "knn", trControl = ctrl, preProcess = c("center","scale"),
+tuneGrid = expand.grid(k = 1:10))
+knnFit <- train(formula, method = "knn", data=smoteTrain, trControl = ctrl, preProcess = c("center","scale"),
+tuneGrid = expand.grid(k = 1:10))
+smoteData$TARGET = as.factor(smoteData$TARGET)
+train = sample(1:nrow(smoteData),(2/3)*nrow(smoteData))
+smoteTrain = smoteData[train,!names(smoteData) %in% smoteData]
+cat("\014")
+rm(list=ls())
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+for(i in 1:ncol(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+ccApproval[,i] <- as.numeric(ccApproval[,i])
+}
+}
+x <- c()
+for(i in 1:ncol(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+ccApproval[,i] <- as.numeric(ccApproval[,i])
+}
+}
+library(smotefamily)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% c("STATUS","ID")],ccApproval$TARGET)
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+install.packages('ROSE')
+library(ROSE)
+roseData <- ROSE(TARGET~.,500000,p=0.5,seed=123)
+library(ROSE)
+library(ROSE)
+roseData <- ROSE(TARGET~.,500000,p=0.5,seed=123)
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+for(i in colnames(ccApproval)){
+if(is.factor(ccApproval[,i])){
+new_col <- paste(i,"num",sep="_")
+ccApproval[,new_col] <- as.numeric(ccApproval[,i])
+}
+}
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+for(i in colnames(ccApproval)){
+if(is.factor(ccApproval[,i])){
+new_col <- paste(i,"NUM",sep="_")
+ccApproval[,new_col] <- as.numeric(ccApproval[,i])
+}
+}
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+x <- c()
+for(i in colnames(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+new_col <- paste(i,"NUM",sep="_")
+ccApproval[,new_col] <- as.numeric(ccApproval[,i])
+}
+}
+library(smotefamily)
+varsToSkipForSMOTE <- append(c("STATUS","ID"),x)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% varsToSkipForSMOTE],ccApproval$TARGET)
+remove.packages("ROSE")
+library(smotefamily)
+library(smotefamily)
+library(smotefamily)
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+for(i in colnames(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+new_col <- paste(i,"NUM",sep="_")
+ccApproval[,new_col] <- as.numeric(ccApproval[,i])
+}
+}
+x <- c()
+for(i in colnames(ccApproval)){
+if(is.factor(ccApproval[,i])){
+x <- append(x,i)
+new_col <- paste(i,"NUM",sep="_")
+ccApproval[,new_col] <- as.numeric(ccApproval[,i])
+}
+}
+varsToSkipForSMOTE <- append(c("STATUS","ID"),x)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% varsToSkipForSMOTE],ccApproval$TARGET_NUM)
+smoteData <- smote$data
+install.packages('ROSE')
+library(ROSE)
+roseData <- ROSE(TARGET~.,500000,p=0.5,seed=123)
+x <- c(1, 4, 4, 5, 5, 5, 6, 6, 9)
+mean(x)*100
+mean(x)
+smoteData <- smote$data
+vec[[c(1,2,1,2)]]
+vec <- strsplit(levels(ccApproval$CODE_GENDER)," ")
+vec[[c(1,2,1,2)]]
+vec[c(1,2,1,2)]
+vec <- as.vector(strsplit(levels(ccApproval$CODE_GENDER)," "))
+vec[c(1,2,1,2)]
+vec <- as.vector(strsplit(levels(ccApproval$CODE_GENDER)," "))
+vec[[c(1,2,1,2)]]
+typeof(vec[[c(1,2,1,2)]])
+vec[c(1,2,1,2)]
+typeof(vec[c(1,2,1,2)])
+smoteData <- smote$data
+x <- data.frame(matrix(ncol=2,nrow=0))
+new_cols <- c()
+rm(list=ls())
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+x <- data.frame(matrix(ncol=2,nrow=0))
+new_cols <- c()
+for(i in colnames(ccApproval)){
+if(is.factor(ccApproval[,i])){
+new_col <- paste(i,"NUM",sep="_")
+new_cols <- append(new_cols,i)
+x <- rbind(x,data.frame(oldCol=i,newCol=new_col))
+ccApproval[,new_col] <- as.numeric(ccApproval[,i])
+}
+}
+library(smotefamily)
+varsToSkipForSMOTE <- append(c("STATUS","ID"),new_cols)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% varsToSkipForSMOTE],ccApproval$TARGET_NUM)
+smoteData <- smote$data
+for(i in 1:nrow(x)){
+oldCol <- x[i,"oldCol"]
+newCol <- x[i,"newCol"]
+vec <- strsplit(levels(ccApproval[,oldCol])," ")
+smoteData[,oldCol] <- unlist(vec[smoteData[,newCol]])
+}
+x$newCol
+vectest <- strsplit(levels(ccApproval[,"CNT_CHILDREN_NUM"])," ")
+levels(ccApproval[,"CNT_CHILDREN_NUM"])
+x$oldCol
+vectest <- strsplit(levels(ccApproval[,"CNT_CHILDREN"])," ")
+vectest
+levels(ccApproval[,"CNT_CHILDREN"])
+vec <- strsplit(levels(ccApproval$CODE_GENDER),\"*\")
+levels(ccApproval[,"CNT_CHILDREN"])
+vec <- strsplit(levels(ccApproval$CODE_GENDER),'\"'*'\"')
+vec <- strsplit(levels(ccApproval$CODE_GENDER),"\"*\"")
+smoteData <- smote$data
+for(i in 1:nrow(x)){
+oldCol <- x[i,"oldCol"]
+newCol <- x[i,"newCol"]
+vec <- strsplit(levels(ccApproval[,oldCol]),"\"*\"")
+smoteData[,oldCol] <- unlist(vec[smoteData[,newCol]])
+}
+#remove the numeric vals for smote
+smoteLogitData = smoteData[,-x$newCol]
+#remove the numeric vals for smote
+smoteLogitData = smoteData[,-c(x$newCol)]
+#remove the numeric vals for smote
+smoteLogitData = smoteData[,!names(smoteData) %in% c(x$newCol,"STATUS")]
+#remove the numeric vals for smote
+smoteLogitData = smoteData[,!names(smoteData) %in% c(x$newCol,"STATUS","class")]
+smoteLogitData[,x[i,"oldCol"]] = as.factor(smoteLogitData[,x[i,"oldCol"]])
+smoteData <- smote$data
+View(ccApproval)
+ccApproval = read.csv("credit_card_approval.csv")
+#changing categorical variables to factor
+#gender
+ccApproval$CODE_GENDER = as.factor(ccApproval$CODE_GENDER)
+ccApproval$FLAG_OWN_CAR = as.factor(ccApproval$FLAG_OWN_CAR)
+ccApproval$FLAG_OWN_REALTY = as.factor(ccApproval$FLAG_OWN_REALTY)
+ccApproval$NAME_EDUCATION_TYPE = as.factor(ccApproval$NAME_EDUCATION_TYPE)
+ccApproval$NAME_HOUSING_TYPE = as.factor(ccApproval$NAME_HOUSING_TYPE)
+#converting age to years
+ccApproval$AGE = round(abs(ccApproval$DAYS_BIRTH)/365,0)
+ccApproval$DAYS_EMPLOYED = abs(ccApproval$DAYS_EMPLOYED)
+ccApproval$TARGET = as.factor(ccApproval$TARGET)
+levels(as.factor(ccApproval$JOB))
+ccApproval$JOB = as.factor(ccApproval$JOB)
+#chance c to p to make better meaning out of it. p means paid.
+ccApproval$STATUS = ifelse(ccApproval$STATUS=='C','P',ccApproval$STATUS)
+ccApproval$STATUS = as.factor(ccApproval$STATUS)
+ccApproval$BEGIN_MONTHS = abs(ccApproval$BEGIN_MONTHS)
+ccApproval$CNT_CHILDREN = as.factor(ccApproval$CNT_CHILDREN)
+ccApproval$NAME_FAMILY_STATUS = as.factor(ccApproval$NAME_FAMILY_STATUS)
+x <- data.frame(matrix(ncol=2,nrow=0))
+new_cols <- c()
+for(i in colnames(ccApproval)){
+if(is.factor(ccApproval[,i])){
+new_col <- paste(i,"NUM",sep="_")
+new_cols <- append(new_cols,i)
+x <- rbind(x,data.frame(oldCol=i,newCol=new_col))
+ccApproval[,new_col] <- as.numeric(ccApproval[,i])
+}
+}
+library(smotefamily)
+varsToSkipForSMOTE <- append(c("STATUS","ID"),new_cols)
+smote <- SMOTE(ccApproval[,!names(ccApproval) %in% varsToSkipForSMOTE],ccApproval$TARGET_NUM)
